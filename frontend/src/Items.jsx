@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Items() {
   const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState('');
+  const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -21,8 +21,8 @@ export default function Items() {
       setItems(response.data.items || []);
       setError(null);
     } catch (err) {
-      console.error('Error fetching items:', err);
-      setError('Không thể tải danh sách. Vui lòng kiểm tra backend.');
+      console.error("Error fetching items:", err);
+      setError("Không thể tải danh sách. Vui lòng kiểm tra backend.");
       setItems([]);
     } finally {
       setLoading(false);
@@ -33,7 +33,7 @@ export default function Items() {
     e.preventDefault();
 
     if (!newItem.trim()) {
-      setError('Vui lòng nhập tên mục.');
+      setError("Vui lòng nhập tên mục.");
       return;
     }
 
@@ -41,19 +41,26 @@ export default function Items() {
       const response = await axios.post(
         `${API_URL}/items`,
         { name: newItem },
-        { timeout: 5000 }
+        { timeout: 5000 },
       );
 
-      setItems([response.data, ...items]);
-      setNewItem('');
-      setSuccess('Mục được thêm thành công!');
+      // Create new item object with the response data
+      const newItemData = {
+        id: response.data.id,
+        name: response.data.name,
+        created_at: new Date().toISOString(),
+      };
+
+      setItems([newItemData, ...items]);
+      setNewItem("");
+      setSuccess("Mục được thêm thành công!");
       setError(null);
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error('Error adding item:', err);
-      setError('Không thể thêm mục. Vui lòng thử lại.');
+      console.error("Error adding item:", err);
+      setError("Không thể thêm mục. Vui lòng thử lại.");
     }
   };
 
@@ -90,7 +97,7 @@ export default function Items() {
           {items.map((item) => (
             <li key={item.id}>
               <span>{item.name}</span>
-              <small>{new Date(item.created_at).toLocaleString('vi-VN')}</small>
+              <small>{new Date(item.created_at).toLocaleString("vi-VN")}</small>
             </li>
           ))}
         </ul>
