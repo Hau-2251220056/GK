@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: devops-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-devops_db}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - devops-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+
+  # Backend Service
+  backend:
+    build: ./backend
+    container_name: devops-backend
+    environment:
+      PORT: 5000
+      DB_HOST: mysql
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-rootpassword}
+      DB_NAME: ${DB_NAME:-devops_db}
+      STUDENT_NAME: ${STUDENT_NAME:-Phan Minh Hậu}
+      STUDENT_ID: ${STUDENT_ID:-2251220056}
+      STUDENT_CLASS: ${STUDENT_CLASS:-22CT2}
+      APP_NAME: ${APP_NAME:-Dự Án DevOps Nhỏ}
+      NODE_ENV: production
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - devops-network
+    restart: unless-stopped
+
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: devops-frontend
+    environment:
+      VITE_API_URL: http://backend:5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - devops-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  devops-network:
+    driver: bridge
